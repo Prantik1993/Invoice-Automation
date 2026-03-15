@@ -1,7 +1,8 @@
-"""
-File Watcher — monitors data/incoming/ and triggers the LangGraph multi-agent pipeline.
-Uses a single persistent event loop to avoid asyncio conflicts with aiosqlite.
-Each PDF gets a unique thread_id for checkpointing and HITL resume.
+"""File watcher — monitors data/incoming/ and triggers the LangGraph pipeline.
+
+Uses a single persistent event loop shared across all PDF processing to avoid
+asyncio conflicts with aiosqlite. Each PDF gets a unique thread_id for
+checkpointing and HITL resume.
 """
 import asyncio
 import time
@@ -17,7 +18,6 @@ from app.core.logging import setup_logging, get_logger
 
 logger = get_logger("watcher")
 
-# Persistent event loop shared across all PDF processing
 _loop: asyncio.AbstractEventLoop = None
 
 
@@ -30,9 +30,9 @@ def get_loop() -> asyncio.AbstractEventLoop:
 
 
 async def init_db():
-    """Create all DB tables if they don't exist. Safe to call multiple times."""
+    """Create all DB tables before processing starts. Safe to call multiple times."""
     from app.database import engine, Base
-    from app.models import invoice, vendor_template  # noqa — registers models
+    from app.models import invoice, vendor_template  # noqa — registers models with SQLAlchemy
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("db_tables_ready")
@@ -47,14 +47,14 @@ class InvoicePDFHandler(FileSystemEventHandler):
         pdf_filename = Path(pdf_path).name
         logger.info("pdf_detected", filename=pdf_filename)
 
-        time.sleep(1)  # Wait for file write to complete
+        time.sleep(1)  # Give the OS time to finish writing the file
 
         loop = get_loop()
         future = asyncio.run_coroutine_threadsafe(
             self._process(pdf_path, pdf_filename), loop
         )
         try:
-            future.result(timeout=120)
+            future.result(timeout=settings.pdf_processing_timeout)
         except Exception as e:
             logger.error("pdf_processing_error", filename=pdf_filename, error=str(e))
 
@@ -92,14 +92,12 @@ def start_watching():
     incoming = settings.incoming_folder
     Path(incoming).mkdir(parents=True, exist_ok=True)
 
-    # Start persistent event loop in background thread
     loop = get_loop()
     loop_thread = threading.Thread(target=loop.run_forever, daemon=True)
     loop_thread.start()
 
-    # Create DB tables before processing any PDFs
     future = asyncio.run_coroutine_threadsafe(init_db(), loop)
-    future.result(timeout=30)
+    future.result(timeout=settings.db_init_timeout)
 
     observer = Observer()
     observer.schedule(InvoicePDFHandler(), path=incoming, recursive=False)

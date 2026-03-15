@@ -17,8 +17,8 @@ FIELDS = [
 ]
 
 
-async def generate_csv(db: AsyncSession, limit: int = 1000) -> str:
-    """Generate CSV of approved invoices. Returns path to generated file."""
+async def generate_csv(db: AsyncSession, limit: int = settings.export_limit) -> str:
+    """Export approved invoices to a timestamped CSV. Returns the file path."""
     result = await db.execute(
         select(Invoice)
         .where(Invoice.status == "approved")
@@ -29,6 +29,7 @@ async def generate_csv(db: AsyncSession, limit: int = 1000) -> str:
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_path = Path(settings.exports_folder) / f"invoices_{timestamp}.csv"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(output_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=FIELDS)

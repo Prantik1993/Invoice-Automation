@@ -1,18 +1,24 @@
+"""Review API — human approval and rejection endpoints.
+
+Single owner of all post-HITL side effects:
+  - DB update with human corrections
+  - File move to processed/
+  - Vendor template learning (including storing known bill_from address)
+
+The graph's final_approve_node does none of these intentionally,
+so they execute exactly once regardless of whether graph resume succeeds.
 """
-Review API — human approval endpoints.
-Human edits fields in Streamlit → clicks Approve → this endpoint:
-  1. Resumes the LangGraph graph with corrections via thread_id (HITL)
-  2. Directly updates DB with corrected values (handles date parsing)
-  3. Triggers vendor template learning
-"""
-from datetime import datetime, date
+from datetime import datetime
+from pathlib import Path
 import shutil
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from langgraph.types import Command
 
+from app.core.utils import parse_date
 from app.database import get_db, AsyncSessionLocal
 from app.models.invoice import Invoice
 from app.agents.graph import get_graph
@@ -24,20 +30,6 @@ router = APIRouter(prefix="/review", tags=["review"])
 logger = get_logger("review_api")
 
 
-def _parse_date(value) -> date | None:
-    """Parse date string in any common format to Python date object."""
-    if not value:
-        return None
-    if isinstance(value, date):
-        return value
-    for fmt in ("%Y-%m-%d", "%m-%d-%Y", "%m/%d/%Y", "%d-%m-%Y", "%d/%m/%Y"):
-        try:
-            return datetime.strptime(str(value).strip(), fmt).date()
-        except ValueError:
-            continue
-    return None
-
-
 class ApprovePayload(BaseModel):
     account_number: str | None = None
     invoice_number: str | None = None
@@ -47,7 +39,7 @@ class ApprovePayload(BaseModel):
     bill_to_address: str | None = None
     bill_from_address: str | None = None
     remittance_address: str | None = None
-    thread_id: str | None = None  # LangGraph thread_id for HITL resume
+    thread_id: str | None = None
 
 
 @router.put("/{invoice_id}/approve")
@@ -63,7 +55,8 @@ async def approve_invoice(
 
     corrections = payload.model_dump(exclude_none=True, exclude={"thread_id"})
 
-    # ── Resume LangGraph graph via HITL if thread_id present ────────────────
+    # Resume the LangGraph graph if the thread is still alive.
+    # We don't block on this — DB update happens regardless below.
     if payload.thread_id:
         try:
             graph = await get_graph()
@@ -73,15 +66,16 @@ async def approve_invoice(
         except Exception as e:
             logger.warning("graph_resume_failed", error=str(e), invoice_id=invoice_id)
 
-    # ── Always update DB directly with human corrections ─────────────────────
-    # This guarantees DB is correct even if graph resume fails
+    # Apply human corrections to the DB record.
     date_fields = {"bill_date", "due_date"}
-    string_fields = {"account_number", "invoice_number", "bill_to_address",
-                     "bill_from_address", "remittance_address"}
+    string_fields = {
+        "account_number", "invoice_number",
+        "bill_to_address", "bill_from_address", "remittance_address",
+    }
 
     for field, value in corrections.items():
         if field in date_fields:
-            setattr(invoice, field, _parse_date(value))
+            setattr(invoice, field, parse_date(value))
         elif field in string_fields:
             setattr(invoice, field, str(value) if value else None)
         elif field == "total_due":
@@ -93,21 +87,26 @@ async def approve_invoice(
     await db.commit()
     await db.refresh(invoice)
 
-    # ── Move PDF to processed ────────────────────────────────────────────────
-    if invoice.pdf_path:
+    # Move file only if it still exists (graph may have moved it already in edge cases).
+    if invoice.pdf_path and Path(invoice.pdf_path).exists():
         try:
-            shutil.move(
-                invoice.pdf_path,
-                f"{settings.processed_folder}/{invoice.pdf_filename}"
-            )
+            dest = Path(settings.processed_folder) / invoice.pdf_filename
+            Path(settings.processed_folder).mkdir(parents=True, exist_ok=True)
+            shutil.move(invoice.pdf_path, dest)
         except Exception as e:
             logger.warning("file_move_failed", invoice_id=invoice_id, error=str(e))
 
-    # ── Vendor template learning ─────────────────────────────────────────────
+    # Vendor template learning — pass bill_from_address so it gets stored
+    # on the template for future reference.
     if invoice.vendor_name:
         try:
             async with AsyncSessionLocal() as tdb:
-                await record_approval(tdb, invoice.vendor_name, invoice.confidence or 0.0)
+                await record_approval(
+                    tdb,
+                    invoice.vendor_name,
+                    invoice.confidence or 0.0,
+                    bill_from_address=invoice.bill_from_address,
+                )
                 await tdb.commit()
                 logger.info("template_updated", vendor=invoice.vendor_name)
         except Exception as e:

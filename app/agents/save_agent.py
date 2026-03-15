@@ -1,29 +1,15 @@
-"""
-Save Agent — always saves invoice to DB first (as pending or approved).
-For auto-approved: saves as approved + moves file immediately.
-For needs_review: saves as pending — Streamlit shows it, HITL resumes graph.
-File move for HITL invoices happens in final_approve_node after human approves.
-"""
-from datetime import datetime, date, timedelta
+"""Save agent — persists invoice to DB as pending or approved."""
+from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
 
 from app.agents.tools.invoice_tools import move_to_processed, move_to_duplicates
+from app.core.utils import parse_date
 from app.database import AsyncSessionLocal
 from app.models.invoice import Invoice
+from app.config import settings
 from app.core.logging import get_logger
 
 logger = get_logger("save_agent")
-
-
-def _parse_date(value) -> date | None:
-    if not value:
-        return None
-    if isinstance(value, date):
-        return value
-    try:
-        return datetime.strptime(str(value), "%Y-%m-%d").date()
-    except Exception:
-        return None
 
 
 async def save_agent_node(state: dict) -> dict:
@@ -36,11 +22,11 @@ async def save_agent_node(state: dict) -> dict:
     pdf_filename = state["pdf_filename"]
 
     invoice_number = state.get("resolved_invoice_number") or fields.get("invoice_number")
-    bill_date = _parse_date(state.get("resolved_bill_date") or fields.get("bill_date"))
-    due_date = _parse_date(state.get("resolved_due_date") or fields.get("due_date"))
+    bill_date = parse_date(state.get("resolved_bill_date") or fields.get("bill_date"))
+    due_date = parse_date(state.get("resolved_due_date") or fields.get("due_date"))
 
     if not due_date and bill_date:
-        due_date = bill_date + timedelta(days=14)
+        due_date = bill_date + timedelta(days=settings.default_payment_days)
 
     async with AsyncSessionLocal() as db:
         invoice = Invoice(
@@ -59,7 +45,6 @@ async def save_agent_node(state: dict) -> dict:
             confidence=state.get("confidence", 0.0),
             extraction_method=state.get("extraction_method", "direct"),
             needs_review=needs_review,
-            # Auto-approved: mark approved now. Needs review: pending until human approves.
             status="approved" if not needs_review else "pending",
             approved_at=datetime.utcnow() if not needs_review else None,
         )
@@ -69,23 +54,27 @@ async def save_agent_node(state: dict) -> dict:
             await db.commit()
             await db.refresh(invoice)
             invoice_id = invoice.id
-            log.append(f"save_agent: saved to DB id={invoice_id} status={'pending' if needs_review else 'approved'}")
+            log.append(f"save_agent: saved id={invoice_id} status={invoice.status}")
         except IntegrityError:
             await db.rollback()
-            log.append("save_agent: duplicate invoice_number — IntegrityError")
+            log.append("save_agent: duplicate invoice_number — skipping")
             logger.warning("db_duplicate", invoice_number=invoice_number, filename=pdf_filename)
             move_to_duplicates.invoke({"pdf_path": pdf_path, "filename": pdf_filename})
             return {"status": "duplicate", "is_duplicate": True, "agent_log": log}
 
-    # Auto-approved: move file immediately
     if not needs_review:
         result = move_to_processed.invoke({"pdf_path": pdf_path, "filename": pdf_filename})
         log.append(f"save_agent: auto-approved, file moved → {result}")
     else:
-        log.append("save_agent: saved as pending — invoice will appear in Streamlit review queue")
+        log.append("save_agent: saved as pending — awaiting human review")
 
-    logger.info("invoice_saved", invoice_id=invoice_id, filename=pdf_filename,
-                needs_review=needs_review, status=invoice.status)
+    logger.info(
+        "invoice_saved",
+        invoice_id=invoice_id,
+        filename=pdf_filename,
+        needs_review=needs_review,
+        status=invoice.status,
+    )
 
     return {
         "invoice_id": invoice_id,

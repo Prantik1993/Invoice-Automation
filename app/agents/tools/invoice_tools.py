@@ -1,8 +1,3 @@
-"""
-Agent Tools — every capability an agent can invoke.
-Wrapped with @tool so LangGraph agents can autonomously decide when to call them.
-"""
-import os
 import shutil
 from datetime import datetime, date, timedelta
 from pathlib import Path
@@ -14,11 +9,9 @@ from app.core.logging import get_logger
 logger = get_logger(__name__)
 
 
-# ── PDF / OCR Tools ──────────────────────────────────────────────────────────
-
 @tool
 def extract_text_from_pdf(pdf_path: str) -> str:
-    """Extract raw text from a PDF file using PyMuPDF. Returns empty string if no text found."""
+    """Extract raw text from a PDF using PyMuPDF. Returns empty string if no text layer found."""
     try:
         import fitz
         doc = fitz.open(pdf_path)
@@ -33,7 +26,7 @@ def extract_text_from_pdf(pdf_path: str) -> str:
 
 @tool
 def extract_text_via_ocr(pdf_path: str) -> str:
-    """Extract text from a scanned PDF using Tesseract OCR. Use when direct extraction returns too little text."""
+    """Extract text from a scanned PDF using Tesseract OCR. Fallback when direct extraction returns too little text."""
     try:
         import pytesseract
         from pdf2image import convert_from_path
@@ -46,12 +39,10 @@ def extract_text_via_ocr(pdf_path: str) -> str:
         return ""
 
 
-# ── File Management Tools ────────────────────────────────────────────────────
-
 @tool
 def move_to_duplicates(pdf_path: str, filename: str) -> str:
-    """Move a PDF file to the duplicates folder. Use when invoice is confirmed duplicate."""
-    dest = str(Path(settings.duplicates_folder) / filename)
+    """Move a PDF to the duplicates folder."""
+    dest = Path(settings.duplicates_folder) / filename
     try:
         Path(settings.duplicates_folder).mkdir(parents=True, exist_ok=True)
         shutil.move(pdf_path, dest)
@@ -64,8 +55,8 @@ def move_to_duplicates(pdf_path: str, filename: str) -> str:
 
 @tool
 def move_to_processed(pdf_path: str, filename: str) -> str:
-    """Move a PDF file to the processed folder. Use when invoice is auto-approved."""
-    dest = str(Path(settings.processed_folder) / filename)
+    """Move a PDF to the processed folder after approval."""
+    dest = Path(settings.processed_folder) / filename
     try:
         Path(settings.processed_folder).mkdir(parents=True, exist_ok=True)
         shutil.move(pdf_path, dest)
@@ -78,8 +69,8 @@ def move_to_processed(pdf_path: str, filename: str) -> str:
 
 @tool
 def move_to_failed(pdf_path: str, filename: str) -> str:
-    """Move a PDF to the failed folder. Use when all extraction methods fail."""
-    dest = str(Path(settings.failed_folder) / filename)
+    """Move a PDF to the failed folder when all extraction methods are exhausted."""
+    dest = Path(settings.failed_folder) / filename
     try:
         Path(settings.failed_folder).mkdir(parents=True, exist_ok=True)
         shutil.move(pdf_path, dest)
@@ -91,28 +82,34 @@ def move_to_failed(pdf_path: str, filename: str) -> str:
 
 @tool
 def check_filename_duplicate(filename: str) -> bool:
-    """Check if a PDF with this exact filename has already been processed."""
-    processed_path = Path(settings.processed_folder) / filename
-    return processed_path.exists()
+    """Check if a PDF with this filename has already been processed, failed, or flagged as duplicate.
 
+    Checks all three terminal folders so previously-failed invoices are not
+    reprocessed on watcher restart.
+    """
+    terminal_folders = [
+        settings.processed_folder,
+        settings.duplicates_folder,
+        settings.failed_folder,
+    ]
+    return any((Path(folder) / filename).exists() for folder in terminal_folders)
 
-# ── Date / Field Fallback Tools ──────────────────────────────────────────────
 
 @tool
 def resolve_due_date(bill_date_str: str | None) -> str | None:
-    """Calculate due date as bill_date + 14 days. Returns ISO date string or null."""
+    """Calculate due date as bill_date + configured payment days. Returns ISO date string or None."""
     if not bill_date_str:
         return None
     try:
         bill_date = datetime.strptime(bill_date_str, "%Y-%m-%d").date()
-        return (bill_date + timedelta(days=14)).isoformat()
+        return (bill_date + timedelta(days=settings.default_payment_days)).isoformat()
     except Exception:
         return None
 
 
 @tool
 def generate_invoice_number(account_number: str | None, bill_date_str: str | None) -> str:
-    """Generate a fallback invoice number as AccountNumber_BillDate when none is found in PDF."""
+    """Generate a fallback invoice number as AccountNumber_BillDate when none is found in the PDF."""
     acc = account_number or "UNKNOWN"
     if bill_date_str:
         try:
@@ -122,8 +119,6 @@ def generate_invoice_number(account_number: str | None, bill_date_str: str | Non
             pass
     return f"{acc}_NODATE"
 
-
-# ── All tools list for agent binding ────────────────────────────────────────
 
 PDF_TOOLS = [extract_text_from_pdf, extract_text_via_ocr]
 FILE_TOOLS = [move_to_duplicates, move_to_processed, move_to_failed, check_filename_duplicate]

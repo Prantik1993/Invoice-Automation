@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from sqlalchemy.orm import DeclarativeBase
 from app.config import settings
 
-# SQLite needs check_same_thread=False, Postgres doesn't need it
+# SQLite needs check_same_thread=False. Postgres needs no special connect args.
 connect_args = {"check_same_thread": False} if "sqlite" in settings.database_url else {}
 
 engine = create_async_engine(

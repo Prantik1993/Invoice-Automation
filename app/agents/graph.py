@@ -1,11 +1,10 @@
-"""
-LangGraph Multi-Agent Graph — Production Level
-─────────────────────────────────────────────────────────────────────────────
+"""LangGraph multi-agent graph for invoice processing.
+
 Flow:
-  supervisor → duplicate_agent → extraction_agent → validation_agent
-            → template_agent → save_agent (always saves first)
-            → human_review_node (interrupt, if needs_review)
-            → supervisor → final_save_agent (approve after HITL)
+    supervisor → duplicate_agent → extraction_agent → validation_agent
+              → template_agent → save_agent
+              → human_review_node (interrupt, if needs_review)
+              → supervisor → final_approve_node
 """
 from typing import Optional
 from typing_extensions import TypedDict
@@ -16,8 +15,6 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
 import aiosqlite
 
-
-# ── State ─────────────────────────────────────────────────────────────────────
 
 class InvoiceState(TypedDict, total=False):
     pdf_path: str
@@ -67,8 +64,6 @@ def make_initial_state(pdf_path: str, pdf_filename: str, thread_id: str = None) 
     )
 
 
-# ── Supervisor ────────────────────────────────────────────────────────────────
-
 async def supervisor_node(state: InvoiceState) -> dict:
     from app.core.logging import get_logger
     logger = get_logger("supervisor")
@@ -94,7 +89,7 @@ async def supervisor_node(state: InvoiceState) -> dict:
 
     if decision == "extraction_agent":
         if not state.get("raw_text"):
-            log.append("supervisor: empty text — forcing OCR retry")
+            log.append("supervisor: empty text → OCR retry")
             return {"supervisor_decision": "extraction_retry", "agent_log": log}
         log.append("supervisor: extraction done → validation_agent")
         return {"supervisor_decision": "validation_agent", "agent_log": log}
@@ -112,7 +107,6 @@ async def supervisor_node(state: InvoiceState) -> dict:
         return {"supervisor_decision": "template_agent", "agent_log": log}
 
     if decision == "template_agent":
-        # Always save first — creates DB record visible in Streamlit
         log.append("supervisor: template done → save_agent")
         return {"supervisor_decision": "save_agent", "agent_log": log}
 
@@ -124,17 +118,15 @@ async def supervisor_node(state: InvoiceState) -> dict:
         return {"supervisor_decision": "end", "agent_log": log}
 
     if decision == "human_review":
-        # After HITL — update the DB record to approved
         log.append("supervisor: human approved → final_approve")
         return {"supervisor_decision": "final_approve", "agent_log": log}
 
-    log.append(f"supervisor: unknown '{decision}' → END")
-    logger.error("supervisor_unknown", decision=decision)
+    log.append(f"supervisor: unknown decision '{decision}' → END")
+    logger.error("supervisor_unknown_decision", decision=decision)
     return {"status": "failed", "supervisor_decision": "end", "agent_log": log}
 
 
 def supervisor_router(state: InvoiceState) -> str:
-    decision = state.get("supervisor_decision")
     mapping = {
         "duplicate_agent": "duplicate_agent",
         "extraction_agent": "extraction_agent",
@@ -146,26 +138,26 @@ def supervisor_router(state: InvoiceState) -> str:
         "final_approve": "final_approve_node",
         "end": END,
     }
-    return mapping.get(decision, END)
+    return mapping.get(state.get("supervisor_decision"), END)
 
-
-# ── Human Review Node (HITL) ──────────────────────────────────────────────────
 
 async def human_review_node(state: InvoiceState) -> dict:
-    """
-    Graph PAUSES here. Invoice already saved as 'pending' in DB.
-    Streamlit shows it. On approval, Streamlit calls the approve API.
-    Graph resumes via Command(resume=corrections).
+    """Pause the graph here. Invoice is already saved as pending in the DB.
+
+    Streamlit shows it in the review queue. On approval the API calls
+    Command(resume=corrections) which wakes this node and returns corrections
+    to the graph.
     """
     from app.core.logging import get_logger
     logger = get_logger("human_review")
 
-    logger.info("graph_paused_for_hitl",
-                filename=state["pdf_filename"],
-                invoice_id=state.get("invoice_id"),
-                thread_id=state.get("thread_id"))
+    logger.info(
+        "graph_paused_for_hitl",
+        filename=state["pdf_filename"],
+        invoice_id=state.get("invoice_id"),
+        thread_id=state.get("thread_id"),
+    )
 
-    # GRAPH PAUSES HERE
     corrections = interrupt({
         "message": "Invoice requires human review",
         "pdf_filename": state["pdf_filename"],
@@ -174,7 +166,6 @@ async def human_review_node(state: InvoiceState) -> dict:
         "confidence": state.get("confidence"),
         "extracted_fields": state.get("extracted_fields", {}),
     })
-    # GRAPH RESUMES HERE
 
     logger.info("graph_resumed", filename=state["pdf_filename"])
 
@@ -183,87 +174,27 @@ async def human_review_node(state: InvoiceState) -> dict:
         "supervisor_decision": "human_review",
         "needs_review": False,
         "agent_log": list(state.get("agent_log", [])) + [
-            "human_review_node: corrections received, graph resuming"
+            "human_review_node: corrections received, resuming"
         ],
     }
 
 
-# ── Final Approve Node ────────────────────────────────────────────────────────
-
 async def final_approve_node(state: InvoiceState) -> dict:
+    """Mark the graph run as complete after HITL approval.
+
+    The actual DB update, file move, and template learning are handled by
+    review.py so they run exactly once regardless of whether the graph
+    resume succeeds or times out.
     """
-    Updates existing DB record to approved after human review.
-    Parses date strings correctly. Triggers template learning.
-    """
-    from datetime import datetime, date as date_type
-    from app.database import AsyncSessionLocal
-    from app.models.invoice import Invoice
-    from app.agents.tools.invoice_tools import move_to_processed
-    from app.services.template_learning import record_approval
     from app.core.logging import get_logger
-    from sqlalchemy import select
-
     logger = get_logger("final_approve")
+
     log = list(state.get("agent_log", []))
-    log.append("final_approve_node: started")
+    log.append("final_approve_node: graph run complete")
 
-    invoice_id = state.get("invoice_id")
-    corrections = state.get("human_corrections") or {}
-
-    def _parse_date(value):
-        if not value:
-            return None
-        if isinstance(value, date_type):
-            return value
-        for fmt in ("%Y-%m-%d", "%m-%d-%Y", "%m/%d/%Y", "%d-%m-%Y", "%d/%m/%Y"):
-            try:
-                return datetime.strptime(str(value).strip(), fmt).date()
-            except ValueError:
-                continue
-        return None
-
-    date_fields = {"bill_date", "due_date"}
-
-    async with AsyncSessionLocal() as db:
-        result = await db.execute(select(Invoice).where(Invoice.id == invoice_id))
-        invoice = result.scalar_one_or_none()
-
-        if invoice:
-            for field, value in corrections.items():
-                if not hasattr(invoice, field):
-                    continue
-                if field in date_fields:
-                    setattr(invoice, field, _parse_date(value))
-                elif field == "total_due":
-                    setattr(invoice, field, float(value) if value else None)
-                else:
-                    setattr(invoice, field, value)
-
-            invoice.status = "approved"
-            invoice.needs_review = False
-            invoice.approved_at = datetime.utcnow()
-            await db.commit()
-            log.append(f"final_approve_node: invoice {invoice_id} approved")
-
-            if invoice.vendor_name:
-                try:
-                    await record_approval(db, invoice.vendor_name, invoice.confidence or 0.0)
-                    await db.commit()
-                    log.append(f"final_approve_node: template updated for {invoice.vendor_name}")
-                except Exception as e:
-                    logger.warning("template_update_failed", error=str(e))
-
-    try:
-        move_to_processed.invoke({"pdf_path": state["pdf_path"], "filename": state["pdf_filename"]})
-        log.append("final_approve_node: file moved to processed/")
-    except Exception as e:
-        log.append(f"final_approve_node: file move warning — {e}")
-
-    logger.info("invoice_final_approved", invoice_id=invoice_id)
+    logger.info("graph_run_complete", invoice_id=state.get("invoice_id"))
     return {"status": "approved", "agent_log": log}
 
-
-# ── Graph Builder ─────────────────────────────────────────────────────────────
 
 def build_graph(checkpointer):
     from app.agents.duplicate_agent import duplicate_agent_node
@@ -310,8 +241,6 @@ def build_graph(checkpointer):
 
     return builder.compile(checkpointer=checkpointer)
 
-
-# ── Async singleton ───────────────────────────────────────────────────────────
 
 _graph = None
 _db_conn = None
