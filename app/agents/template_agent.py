@@ -1,6 +1,3 @@
-"""
-Template Agent — vendor template matching and layout change detection.
-"""
 from app.database import AsyncSessionLocal
 from app.services.template_learning import is_vendor_active, check_layout_change
 from app.core.logging import get_logger
@@ -33,7 +30,7 @@ async def template_agent_node(state: dict) -> dict:
 
         active = await is_vendor_active(db, vendor_name)
         if active:
-            log.append(f"template_agent: {vendor_name} active template → AUTO-APPROVE")
+            log.append(f"template_agent: {vendor_name} active template → auto-approve")
             logger.info("auto_approve", vendor=vendor_name, confidence=confidence)
             return {"needs_review": False, "agent_log": log}
 

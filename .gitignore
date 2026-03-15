@@ -1,4 +1,4 @@
-# Python-generated files
+# Python
 __pycache__/
 *.py[oc]
 build/
@@ -9,7 +9,10 @@ wheels/
 # Virtual environments
 .venv
 .env
-alembic.ini
 
+# Local data — never commit real PDFs or DB files
+data/
+logs/
 
-
+# alembic.ini is intentionally tracked — it contains no secrets.
+# DB credentials come from environment variables, not from this file.

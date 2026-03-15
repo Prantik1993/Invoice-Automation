@@ -1,7 +1,3 @@
-"""
-Extraction Agent — PDF text → OCR fallback → LLM extraction.
-Autonomously decides extraction method. Self-healing via supervisor retry signal.
-"""
 from app.agents.tools.invoice_tools import extract_text_from_pdf, extract_text_via_ocr
 from app.services.llm_service import extract_invoice_fields
 from app.core.exceptions import LLMExtractionError
@@ -34,7 +30,11 @@ async def extraction_agent_node(state: dict) -> dict:
     if not raw_text:
         log.append("extraction_agent: all methods returned empty text")
         logger.error("extraction_failed", filename=state["pdf_filename"])
-        return {"raw_text": "", "error": "All extraction methods returned empty text", "agent_log": log}
+        return {
+            "raw_text": "",
+            "error": "All extraction methods returned empty text",
+            "agent_log": log,
+        }
 
     try:
         fields = await extract_invoice_fields(raw_text)

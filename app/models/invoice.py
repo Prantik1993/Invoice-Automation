@@ -1,61 +1,32 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_db
-from app.models.invoice import Invoice
-from app.config import settings
-
-router = APIRouter(prefix="/invoices", tags=["invoices"])
+from sqlalchemy import Column, Integer, String, Float, Date, Boolean, DateTime, Text
+from sqlalchemy.sql import func
+from app.database import Base
 
 
-@router.get("/pending")
-async def get_pending_invoices(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(Invoice)
-        .where(Invoice.needs_review == True)
-        .order_by(Invoice.created_at.desc())
-    )
-    return [_serialize(inv) for inv in result.scalars().all()]
+class Invoice(Base):
+    __tablename__ = "invoices"
 
+    id = Column(Integer, primary_key=True, index=True)
+    pdf_filename = Column(String, nullable=False)
+    pdf_path = Column(String, nullable=False)
 
-@router.get("/{invoice_id}")
-async def get_invoice(invoice_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Invoice).where(Invoice.id == invoice_id))
-    invoice = result.scalar_one_or_none()
-    if not invoice:
-        raise HTTPException(status_code=404, detail="Invoice not found")
-    return _serialize(invoice)
+    # Extracted fields
+    account_number = Column(String, index=True)
+    invoice_number = Column(String, unique=True, index=True)
+    bill_date = Column(Date, nullable=True)
+    due_date = Column(Date, nullable=True)
+    total_due = Column(Float, nullable=True)
+    bill_to_address = Column(Text, nullable=True)
+    bill_from_address = Column(Text, nullable=True)
+    remittance_address = Column(Text, nullable=True)
 
+    # Processing metadata
+    vendor_name = Column(String, nullable=True, index=True)
+    thread_id = Column(String, nullable=True, index=True)
+    confidence = Column(Float, default=0.0)
+    extraction_method = Column(String, default="direct")
+    needs_review = Column(Boolean, default=True)
+    status = Column(String, default="pending")  # pending | approved | rejected | duplicate
 
-@router.get("/")
-async def list_invoices(
-    limit: int = settings.default_page_limit,
-    db: AsyncSession = Depends(get_db),
-):
-    result = await db.execute(
-        select(Invoice).order_by(Invoice.created_at.desc()).limit(limit)
-    )
-    return [_serialize(inv) for inv in result.scalars().all()]
-
-
-def _serialize(inv: Invoice) -> dict:
-    return {
-        "id": inv.id,
-        "pdf_filename": inv.pdf_filename,
-        "account_number": inv.account_number,
-        "invoice_number": inv.invoice_number,
-        "bill_date": str(inv.bill_date) if inv.bill_date else None,
-        "due_date": str(inv.due_date) if inv.due_date else None,
-        "total_due": inv.total_due,
-        "bill_to_address": inv.bill_to_address,
-        "bill_from_address": inv.bill_from_address,
-        "remittance_address": inv.remittance_address,
-        "vendor_name": inv.vendor_name,
-        "thread_id": inv.thread_id,
-        "confidence": inv.confidence,
-        "extraction_method": inv.extraction_method,
-        "needs_review": inv.needs_review,
-        "status": inv.status,
-        "created_at": str(inv.created_at),
-        "approved_at": str(inv.approved_at) if inv.approved_at else None,
-    }
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    approved_at = Column(DateTime(timezone=True), nullable=True)

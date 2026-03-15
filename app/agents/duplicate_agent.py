@@ -1,6 +1,3 @@
-"""
-Duplicate Agent — filename-based duplicate detection using tools.
-"""
 from app.agents.tools.invoice_tools import check_filename_duplicate, move_to_duplicates
 from app.core.logging import get_logger
 
