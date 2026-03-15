@@ -1,0 +1,180 @@
+{"event": "app_started", "level": "info", "logger": "app.main", "timestamp": "2026-03-14T13:52:10.878429Z"}
+{"folder": "./data/incoming", "event": "watcher_started", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T13:54:00.378603Z"}
+{"filename": "W0030531356526446933066716395.pdf", "event": "pdf_detected", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T13:55:16.175267Z"}
+{"filename": "W0030531356526446933066716395.pdf", "error": "'_AsyncGeneratorContextManager' object has no attribute 'get_next_version'", "thread_id": "d6f55860-aaf2-4c41-a892-7daa56407b9a", "event": "graph_failed", "level": "error", "logger": "watcher", "timestamp": "2026-03-14T13:55:26.873199Z"}
+{"folder": "./data/incoming", "event": "watcher_started", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:01:08.619635Z"}
+{"filename": "W0030531356526446933066716395.pdf", "event": "pdf_detected", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:01:32.459357Z"}
+{"filename": "W0030531356526446933066716395.pdf", "error": "'_AsyncGeneratorContextManager' object has no attribute 'get_next_version'", "thread_id": "40c401b0-a7de-4e28-9e90-cc81de24dcb6", "event": "graph_failed", "level": "error", "logger": "watcher", "timestamp": "2026-03-14T14:01:41.641470Z"}
+{"event": "app_stopped", "level": "info", "logger": "app.main", "timestamp": "2026-03-14T14:02:09.305456Z"}
+{"event": "app_started", "level": "info", "logger": "app.main", "timestamp": "2026-03-14T14:02:11.538950Z"}
+{"event": "app_stopped", "level": "info", "logger": "app.main", "timestamp": "2026-03-14T14:07:02.996476Z"}
+{"event": "app_started", "level": "info", "logger": "app.main", "timestamp": "2026-03-14T14:07:04.759482Z"}
+{"folder": "./data/incoming", "event": "watcher_started", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:07:30.996499Z"}
+{"filename": "W0030531356526446933066716395.pdf", "event": "pdf_detected", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:07:34.785838Z"}
+{"filename": "W0030531356526446933066716395.pdf", "error": "'pdf_path'", "thread_id": "28939e87-cffd-41fc-bae3-0420baea1478", "event": "graph_failed", "level": "error", "logger": "watcher", "timestamp": "2026-03-14T14:07:37.438321Z"}
+{"folder": "./data/incoming", "event": "watcher_started", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:19.190186Z"}
+{"filename": "W0030531356526446933066716395.pdf", "event": "pdf_detected", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:25.146594Z"}
+{"path": "./data/incoming\\W0030531356526446933066716395.pdf", "chars": 4487, "event": "tool_pdf_extracted", "level": "info", "logger": "app.agents.tools.invoice_tools", "timestamp": "2026-03-14T14:11:28.633128Z"}
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+{"vendor": "T MOBILE USA", "confidence": 0.9, "event": "llm_extracted", "level": "info", "logger": "app.services.llm_service", "timestamp": "2026-03-14T14:11:33.291899Z"}
+{"method": "direct", "confidence": 0.9, "vendor": "T MOBILE USA", "event": "extraction_success", "level": "info", "logger": "extraction_agent", "timestamp": "2026-03-14T14:11:33.294641Z"}
+{"filename": "W0030531356526446933066716395.pdf", "thread_id": "d695bb46-aef3-4563-b116-b88d293ef310", "event": "graph_paused_for_hitl", "level": "info", "logger": "human_review", "timestamp": "2026-03-14T14:11:33.413928Z"}
+{"filename": "W0030531356526446933066716395.pdf", "status": "processing", "invoice_id": null, "thread_id": "d695bb46-aef3-4563-b116-b88d293ef310", "event": "pdf_processed", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.436087Z"}
+{"thread_id": "d695bb46-aef3-4563-b116-b88d293ef310", "filename": "W0030531356526446933066716395.pdf", "event": "graph_paused_awaiting_hitl", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.436087Z"}
+{"entry": "supervisor: start \u2192 duplicate_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.436087Z"}
+{"entry": "duplicate_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.436087Z"}
+{"entry": "duplicate_agent: no duplicate found", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.438532Z"}
+{"entry": "supervisor: duplicate check passed \u2192 extraction_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.438532Z"}
+{"entry": "extraction_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.438532Z"}
+{"entry": "extraction_agent: direct extraction \u2192 4486 chars", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.438532Z"}
+{"entry": "extraction_agent: LLM done \u2014 confidence=0.90 vendor=T MOBILE USA", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.438532Z"}
+{"entry": "supervisor: extraction done \u2192 validation_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.440066Z"}
+{"entry": "validation_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.440066Z"}
+{"entry": "validation_agent: invoice_number generated \u2192 82247003_20251006", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.440066Z"}
+{"entry": "validation_agent: all checks passed confidence=0.90", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.440066Z"}
+{"entry": "supervisor: validation done \u2192 template_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.440066Z"}
+{"entry": "template_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.440066Z"}
+{"entry": "template_agent: T MOBILE USA no active template \u2192 review", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.440066Z"}
+{"entry": "supervisor: needs review \u2192 human_review_node", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:11:33.440066Z"}
+{"event": "app_stopped", "level": "info", "logger": "app.main", "timestamp": "2026-03-14T14:12:01.017928Z"}
+{"event": "app_started", "level": "info", "logger": "app.main", "timestamp": "2026-03-14T14:12:02.724987Z"}
+{"folder": "./data/incoming", "event": "watcher_started", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:13:54.488019Z"}
+{"filename": "W0030531356526446933066716395.pdf", "event": "pdf_detected", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:14:14.301326Z"}
+{"path": "./data/incoming\\W0030531356526446933066716395.pdf", "chars": 4487, "event": "tool_pdf_extracted", "level": "info", "logger": "app.agents.tools.invoice_tools", "timestamp": "2026-03-14T14:14:16.654095Z"}
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+{"vendor": "T MOBILE USA", "confidence": 0.9, "event": "llm_extracted", "level": "info", "logger": "app.services.llm_service", "timestamp": "2026-03-14T14:14:20.972064Z"}
+{"method": "direct", "confidence": 0.9, "vendor": "T MOBILE USA", "event": "extraction_success", "level": "info", "logger": "extraction_agent", "timestamp": "2026-03-14T14:14:20.973668Z"}
+{"filename": "W0030531356526446933066716395.pdf", "error": "(sqlite3.OperationalError) no such table: vendor_templates\n[SQL: SELECT vendor_templates.id, vendor_templates.vendor_name, vendor_templates.approval_count, vendor_templates.is_active, vendor_templates.recent_confidences, vendor_templates.avg_confidence, vendor_templates.known_bill_from, vendor_templates.created_at, vendor_templates.updated_at \nFROM vendor_templates \nWHERE vendor_templates.vendor_name = ?]\n[parameters: ('T MOBILE USA',)]\n(Background on this error at: https://sqlalche.me/e/20/e3q8)", "thread_id": "715e0f3b-9030-475a-b9c7-6d783cce8f5a", "event": "graph_failed", "level": "error", "logger": "watcher", "timestamp": "2026-03-14T14:14:21.033117Z"}
+{"event": "db_tables_ready", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:16:46.399561Z"}
+{"folder": "./data/incoming", "event": "watcher_started", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:16:46.401568Z"}
+{"event": "app_stopped", "level": "info", "logger": "app.main", "timestamp": "2026-03-14T14:17:01.573105Z"}
+{"event": "app_started", "level": "info", "logger": "app.main", "timestamp": "2026-03-14T14:17:03.193102Z"}
+{"filename": "W0030531356526446933066716395.pdf", "event": "pdf_detected", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:04.397479Z"}
+{"path": "./data/incoming\\W0030531356526446933066716395.pdf", "chars": 4487, "event": "tool_pdf_extracted", "level": "info", "logger": "app.agents.tools.invoice_tools", "timestamp": "2026-03-14T14:17:06.534337Z"}
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+{"vendor": "T MOBILE USA", "confidence": 0.9, "event": "llm_extracted", "level": "info", "logger": "app.services.llm_service", "timestamp": "2026-03-14T14:17:10.937147Z"}
+{"method": "direct", "confidence": 0.9, "vendor": "T MOBILE USA", "event": "extraction_success", "level": "info", "logger": "extraction_agent", "timestamp": "2026-03-14T14:17:10.939154Z"}
+{"filename": "W0030531356526446933066716395.pdf", "thread_id": "a09e4daa-7b87-46f4-a3c8-fb4abdef31df", "event": "graph_paused_for_hitl", "level": "info", "logger": "human_review", "timestamp": "2026-03-14T14:17:10.961456Z"}
+{"filename": "W0030531356526446933066716395.pdf", "status": "processing", "invoice_id": null, "thread_id": "a09e4daa-7b87-46f4-a3c8-fb4abdef31df", "event": "pdf_processed", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.975137Z"}
+{"thread_id": "a09e4daa-7b87-46f4-a3c8-fb4abdef31df", "filename": "W0030531356526446933066716395.pdf", "event": "graph_paused_awaiting_hitl", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.975137Z"}
+{"entry": "supervisor: start \u2192 duplicate_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.975137Z"}
+{"entry": "duplicate_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.975137Z"}
+{"entry": "duplicate_agent: no duplicate found", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.975137Z"}
+{"entry": "supervisor: duplicate check passed \u2192 extraction_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.975137Z"}
+{"entry": "extraction_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.977707Z"}
+{"entry": "extraction_agent: direct extraction \u2192 4486 chars", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.977707Z"}
+{"entry": "extraction_agent: LLM done \u2014 confidence=0.90 vendor=T MOBILE USA", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.977707Z"}
+{"entry": "supervisor: extraction done \u2192 validation_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.978833Z"}
+{"entry": "validation_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.978833Z"}
+{"entry": "validation_agent: invoice_number generated \u2192 82247003_20251006", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.979562Z"}
+{"entry": "validation_agent: all checks passed confidence=0.90", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.979562Z"}
+{"entry": "supervisor: validation done \u2192 template_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.980856Z"}
+{"entry": "template_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.981297Z"}
+{"entry": "template_agent: T MOBILE USA no active template \u2192 review", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.982054Z"}
+{"entry": "supervisor: needs review \u2192 human_review_node", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:17:10.982054Z"}
+{"event": "app_stopped", "level": "info", "logger": "app.main", "timestamp": "2026-03-14T14:23:19.534260Z"}
+{"event": "app_started", "level": "info", "logger": "app.main", "timestamp": "2026-03-14T14:23:21.677888Z"}
+{"event": "db_tables_ready", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:25.233202Z"}
+{"folder": "./data/incoming", "event": "watcher_started", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:25.234672Z"}
+{"filename": "W0030531356526446933066716395.pdf", "event": "pdf_detected", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:31.601588Z"}
+{"path": "./data/incoming\\W0030531356526446933066716395.pdf", "chars": 4487, "event": "tool_pdf_extracted", "level": "info", "logger": "app.agents.tools.invoice_tools", "timestamp": "2026-03-14T14:23:33.635711Z"}
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+{"vendor": "T MOBILE USA", "confidence": 0.9, "event": "llm_extracted", "level": "info", "logger": "app.services.llm_service", "timestamp": "2026-03-14T14:23:37.987764Z"}
+{"method": "direct", "confidence": 0.9, "vendor": "T MOBILE USA", "event": "extraction_success", "level": "info", "logger": "extraction_agent", "timestamp": "2026-03-14T14:23:37.987764Z"}
+{"invoice_id": 1, "filename": "W0030531356526446933066716395.pdf", "needs_review": true, "status": "pending", "event": "invoice_saved", "level": "info", "logger": "save_agent", "timestamp": "2026-03-14T14:23:38.024655Z"}
+{"filename": "W0030531356526446933066716395.pdf", "invoice_id": 1, "thread_id": "4acd0c94-a955-45fb-975f-e578a850b33c", "event": "graph_paused_for_hitl", "level": "info", "logger": "human_review", "timestamp": "2026-03-14T14:23:38.025901Z"}
+{"filename": "W0030531356526446933066716395.pdf", "status": "pending", "invoice_id": 1, "thread_id": "4acd0c94-a955-45fb-975f-e578a850b33c", "event": "pdf_processed", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.033109Z"}
+{"entry": "supervisor: start \u2192 duplicate_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.033109Z"}
+{"entry": "duplicate_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.033109Z"}
+{"entry": "duplicate_agent: no duplicate found", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.033109Z"}
+{"entry": "supervisor: duplicate clear \u2192 extraction_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.038291Z"}
+{"entry": "extraction_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.038291Z"}
+{"entry": "extraction_agent: direct extraction \u2192 4486 chars", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.038291Z"}
+{"entry": "extraction_agent: LLM done \u2014 confidence=0.90 vendor=T MOBILE USA", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.038291Z"}
+{"entry": "supervisor: extraction done \u2192 validation_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.038291Z"}
+{"entry": "validation_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.038291Z"}
+{"entry": "validation_agent: invoice_number generated \u2192 82247003_20251006", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.038291Z"}
+{"entry": "validation_agent: all checks passed confidence=0.90", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.038291Z"}
+{"entry": "supervisor: validation done \u2192 template_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.038291Z"}
+{"entry": "template_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.038291Z"}
+{"entry": "template_agent: T MOBILE USA no active template \u2192 review", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.038291Z"}
+{"entry": "supervisor: template done \u2192 save_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.040808Z"}
+{"entry": "save_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.041170Z"}
+{"entry": "save_agent: saved to DB id=1 status=pending", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.041170Z"}
+{"entry": "save_agent: saved as pending \u2014 invoice will appear in Streamlit review queue", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.041170Z"}
+{"entry": "supervisor: saved as pending \u2192 human_review_node", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:23:38.041170Z"}
+{"filename": "W0030531356526446933066716395.pdf", "invoice_id": 1, "thread_id": "4acd0c94-a955-45fb-975f-e578a850b33c", "event": "graph_paused_for_hitl", "level": "info", "logger": "human_review", "timestamp": "2026-03-14T14:24:54.920629Z"}
+{"filename": "W0030531356526446933066716395.pdf", "event": "graph_resumed", "level": "info", "logger": "human_review", "timestamp": "2026-03-14T14:24:54.923593Z"}
+{"error": "(builtins.TypeError) SQLite Date type only accepts Python date objects as input.\n[SQL: UPDATE invoices SET bill_date=?, due_date=?, bill_to_address=?, bill_from_address=?, needs_review=?, status=?, approved_at=? WHERE invoices.id = ?]\n[parameters: [{'approved_at': datetime.datetime(2026, 3, 14, 14, 24, 54, 936232), 'status': 'approved', 'bill_from_address': 'T-MOBILE USA\\nC/O TEOCO, MAILSTOP: TMO ... (78 characters truncated) ... : 'T-MOBILE USA\\n1732 Finney Rd, Murphysboro, IL 62966', 'needs_review': False, 'bill_date': '10-06-2025', 'due_date': '10-28-2025', 'invoices_id': 1}]]", "falling_back": true, "event": "graph_resume_failed", "level": "warning", "logger": "review_api", "timestamp": "2026-03-14T14:24:54.976405Z"}
+{"error": "(builtins.TypeError) SQLite Date type only accepts Python date objects as input.\n[SQL: UPDATE invoices SET bill_date=?, due_date=?, bill_to_address=?, bill_from_address=?, needs_review=?, status=?, approved_at=? WHERE invoices.id = ?]\n[parameters: [{'approved_at': datetime.datetime(2026, 3, 14, 14, 25, 23, 332977), 'status': 'approved', 'bill_from_address': 'T-MOBILE USA\\nC/O TEOCO, MAILSTOP: TMO ... (78 characters truncated) ... : 'T-MOBILE USA\\n1732 Finney Rd, Murphysboro, IL 62966', 'needs_review': False, 'bill_date': '10-06-2025', 'due_date': '10-28-2025', 'invoices_id': 1}]]", "falling_back": true, "event": "graph_resume_failed", "level": "warning", "logger": "review_api", "timestamp": "2026-03-14T14:25:23.337124Z"}
+{"event": "app_stopped", "level": "info", "logger": "app.main", "timestamp": "2026-03-14T14:30:02.013129Z"}
+{"event": "app_started", "level": "info", "logger": "app.main", "timestamp": "2026-03-14T14:30:19.070290Z"}
+{"event": "db_tables_ready", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:25.812778Z"}
+{"folder": "./data/incoming", "event": "watcher_started", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:25.812778Z"}
+{"filename": "W0030531356526446933066716395.pdf", "event": "pdf_detected", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:39.303649Z"}
+{"path": "./data/incoming\\W0030531356526446933066716395.pdf", "chars": 4487, "event": "tool_pdf_extracted", "level": "info", "logger": "app.agents.tools.invoice_tools", "timestamp": "2026-03-14T14:30:41.382808Z"}
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+{"vendor": "T MOBILE USA", "confidence": 0.9, "event": "llm_extracted", "level": "info", "logger": "app.services.llm_service", "timestamp": "2026-03-14T14:30:46.756902Z"}
+{"method": "direct", "confidence": 0.9, "vendor": "T MOBILE USA", "event": "extraction_success", "level": "info", "logger": "extraction_agent", "timestamp": "2026-03-14T14:30:46.756902Z"}
+{"invoice_id": 1, "filename": "W0030531356526446933066716395.pdf", "needs_review": true, "status": "pending", "event": "invoice_saved", "level": "info", "logger": "save_agent", "timestamp": "2026-03-14T14:30:46.804598Z"}
+{"filename": "W0030531356526446933066716395.pdf", "invoice_id": 1, "thread_id": "f831dda3-7ac5-4292-85f3-6f45247919a9", "event": "graph_paused_for_hitl", "level": "info", "logger": "human_review", "timestamp": "2026-03-14T14:30:46.806152Z"}
+{"filename": "W0030531356526446933066716395.pdf", "status": "pending", "invoice_id": 1, "thread_id": "f831dda3-7ac5-4292-85f3-6f45247919a9", "event": "pdf_processed", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "supervisor: start \u2192 duplicate_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "duplicate_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "duplicate_agent: no duplicate found", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "supervisor: duplicate clear \u2192 extraction_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "extraction_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "extraction_agent: direct extraction \u2192 4486 chars", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "extraction_agent: LLM done \u2014 confidence=0.90 vendor=T MOBILE USA", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "supervisor: extraction done \u2192 validation_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "validation_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "validation_agent: invoice_number generated \u2192 82247003_20251006", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "validation_agent: all checks passed confidence=0.90", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "supervisor: validation done \u2192 template_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "template_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "template_agent: T MOBILE USA no active template \u2192 review", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "supervisor: template done \u2192 save_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "save_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "save_agent: saved to DB id=1 status=pending", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "save_agent: saved as pending \u2014 invoice will appear in Streamlit review queue", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"entry": "supervisor: saved as pending \u2192 human_review_node", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:30:46.814779Z"}
+{"filename": "W0030531356526446933066716395.pdf", "invoice_id": 1, "thread_id": "f831dda3-7ac5-4292-85f3-6f45247919a9", "event": "graph_paused_for_hitl", "level": "info", "logger": "human_review", "timestamp": "2026-03-14T14:31:50.875716Z"}
+{"filename": "W0030531356526446933066716395.pdf", "event": "graph_resumed", "level": "info", "logger": "human_review", "timestamp": "2026-03-14T14:31:50.891450Z"}
+{"vendor": "T MOBILE USA", "event": "vendor_template_created", "level": "info", "logger": "app.services.template_learning", "timestamp": "2026-03-14T14:31:50.930718Z"}
+{"vendor": "T MOBILE USA", "event": "vendor_template_activated", "level": "info", "logger": "app.services.template_learning", "timestamp": "2026-03-14T14:31:50.930718Z"}
+{"filename": "W0030531356526446933066716395.pdf", "event": "tool_moved_processed", "level": "info", "logger": "app.agents.tools.invoice_tools", "timestamp": "2026-03-14T14:31:50.944681Z"}
+{"invoice_id": 1, "event": "invoice_final_approved", "level": "info", "logger": "final_approve", "timestamp": "2026-03-14T14:31:50.944681Z"}
+{"thread_id": "f831dda3-7ac5-4292-85f3-6f45247919a9", "invoice_id": 1, "event": "graph_resumed", "level": "info", "logger": "review_api", "timestamp": "2026-03-14T14:31:50.954377Z"}
+{"invoice_id": 1, "error": "[Errno 2] No such file or directory: './data/incoming\\\\W0030531356526446933066716395.pdf'", "event": "file_move_failed", "level": "warning", "logger": "review_api", "timestamp": "2026-03-14T14:31:50.970248Z"}
+{"vendor": "T MOBILE USA", "event": "template_updated", "level": "info", "logger": "review_api", "timestamp": "2026-03-14T14:31:50.987432Z"}
+{"invoice_id": 1, "vendor": "T MOBILE USA", "event": "invoice_approved", "level": "info", "logger": "review_api", "timestamp": "2026-03-14T14:31:50.987432Z"}
+{"filename": "W00305314810401960027561956353.pdf", "event": "pdf_detected", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:48.096475Z"}
+{"path": "./data/incoming\\W00305314810401960027561956353.pdf", "chars": 4448, "event": "tool_pdf_extracted", "level": "info", "logger": "app.agents.tools.invoice_tools", "timestamp": "2026-03-14T14:32:49.177270Z"}
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+{"vendor": "T MOBILE USA", "confidence": 0.9, "event": "llm_extracted", "level": "info", "logger": "app.services.llm_service", "timestamp": "2026-03-14T14:32:54.052283Z"}
+{"method": "direct", "confidence": 0.9, "vendor": "T MOBILE USA", "event": "extraction_success", "level": "info", "logger": "extraction_agent", "timestamp": "2026-03-14T14:32:54.052283Z"}
+{"vendor": "T MOBILE USA", "confidence": 0.9, "event": "auto_approve", "level": "info", "logger": "template_agent", "timestamp": "2026-03-14T14:32:54.113772Z"}
+{"filename": "W00305314810401960027561956353.pdf", "event": "tool_moved_processed", "level": "info", "logger": "app.agents.tools.invoice_tools", "timestamp": "2026-03-14T14:32:54.149969Z"}
+{"invoice_id": 2, "filename": "W00305314810401960027561956353.pdf", "needs_review": false, "status": "approved", "event": "invoice_saved", "level": "info", "logger": "save_agent", "timestamp": "2026-03-14T14:32:54.155362Z"}
+{"filename": "W00305314810401960027561956353.pdf", "status": "approved", "invoice_id": 2, "thread_id": "69cded42-3241-4374-9739-345882049107", "event": "pdf_processed", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "supervisor: start \u2192 duplicate_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "duplicate_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "duplicate_agent: no duplicate found", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "supervisor: duplicate clear \u2192 extraction_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "extraction_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "extraction_agent: direct extraction \u2192 4447 chars", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "extraction_agent: LLM done \u2014 confidence=0.90 vendor=T MOBILE USA", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "supervisor: extraction done \u2192 validation_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "validation_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "validation_agent: invoice_number generated \u2192 82247011_20251006", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "validation_agent: all checks passed confidence=0.90", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "supervisor: validation done \u2192 template_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "template_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "template_agent: T MOBILE USA active template \u2192 AUTO-APPROVE", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "supervisor: template done \u2192 save_agent", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "save_agent: started", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "save_agent: saved to DB id=2 status=approved", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "save_agent: auto-approved, file moved \u2192 Moved to data\\processed\\W00305314810401960027561956353.pdf", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"entry": "supervisor: auto-approved \u2192 END", "event": "agent_log", "level": "info", "logger": "watcher", "timestamp": "2026-03-14T14:32:54.163607Z"}
+{"path": "data\\exports\\invoices_20260314_200351.csv", "count": 2, "event": "csv_generated", "level": "info", "logger": "app.services.csv_exporter", "timestamp": "2026-03-14T14:33:51.389374Z"}
+{"event": "app_stopped", "level": "info", "logger": "app.main", "timestamp": "2026-03-14T14:36:14.769567Z"}

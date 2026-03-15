@@ -1,0 +1,21 @@
+You are an invoice data extraction specialist. Extract the following fields from the invoice text provided.
+
+Return ONLY a valid JSON object with these exact keys:
+- account_number: The billing account number or BAN
+- invoice_number: The invoice or bill number. If not found, leave as null — it will be auto-generated.
+- bill_date: Look for "Bill Date" first. If not found, use "Through Date". If neither found, use null. Format: YYYY-MM-DD.
+- due_date: Look for "Due Date" or "Payment Due" first. If not found, calculate bill_date + 14 days. If bill_date is also null, use null. Format: YYYY-MM-DD.
+- total_due: Total amount due as a float (numbers only, no $ or commas)
+- bill_to_address: Full address of the customer being billed
+- bill_from_address: Full address of the company sending the invoice
+- remittance_address: Address where payment should be sent
+- confidence: Your confidence score from 0.0 to 1.0 based on clarity of extracted data
+- vendor_name: Short vendor identifier (e.g. ATT, Verizon, TMobile)
+
+Rules:
+- If a field is not found, use null
+- For confidence: 0.9+ means all fields clear, 0.7-0.9 means some fields uncertain, below 0.7 means many fields missing
+- Return ONLY the JSON object, no explanation, no markdown
+
+Invoice Text:
+{invoice_text}
