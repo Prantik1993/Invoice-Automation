@@ -1,99 +1,218 @@
 # Invoice Automation — Multi-Agent LangGraph System
 
-Automated invoice processing pipeline using LangGraph agents, FastAPI, PostgreSQL, and Streamlit.
+I built this to solve a real problem: processing a pile of vendor invoices manually every month is tedious, error-prone, and doesn't scale. This system watches a folder, picks up PDFs automatically, runs them through a LangGraph multi-agent pipeline, and learns vendor patterns over time so repeat invoices don't even need a human to look at them.
 
-## Architecture
+The first invoice from any vendor goes to a human review queue. After you approve it once, the system remembers — future invoices from the same vendor auto-approve if confidence stays high. If confidence starts dropping (layout changed, new format), it flags it again automatically.
+
+---
+
+## How it actually works
 
 ```
-PDF Drop → File Watcher → LangGraph Graph
-                              │
-                    ┌─────────▼──────────┐
-                    │   DuplicateAgent   │ → duplicate/ folder
-                    └─────────┬──────────┘
-                    ┌─────────▼──────────┐
-                    │  ExtractionAgent   │ → text → OCR fallback → LLM
-                    └─────────┬──────────┘
-                    ┌─────────▼──────────┐
-                    │  ValidationAgent   │ → confidence + field check
-                    └─────────┬──────────┘
-                    ┌─────────▼──────────┐
-                    │  TemplateAgent     │ → vendor auto-approve / layout change
-                    └─────────┬──────────┘
-                    ┌─────────▼──────────┐
-                    │    SaveAgent       │ → PostgreSQL + file move
-                    └────────────────────┘
-                              │
-                    ┌─────────▼──────────┐
-                    │   Streamlit UI     │ → human review & approve
-                    └────────────────────┘
+PDF lands in data/incoming/
+        ↓
+   File Watcher (watchdog)
+        ↓
+   LangGraph Graph
+        ↓
+┌─────────────────────┐
+│   DuplicateAgent    │ — checks filename against processed/ folder
+└──────────┬──────────┘
+┌──────────▼──────────┐
+│  ExtractionAgent    │ — PyMuPDF first, Tesseract OCR fallback
+└──────────┬──────────┘
+┌──────────▼──────────┐
+│  ValidationAgent    │ — required fields, confidence check, fallback rules
+└──────────┬──────────┘
+┌──────────▼──────────┐
+│   TemplateAgent     │ — known vendor? auto-approve or flag layout change
+└──────────┬──────────┘
+┌──────────▼──────────┐
+│     SaveAgent       │ — writes to Postgres, moves file
+└──────────┬──────────┘
+           ↓
+   Human Review (Streamlit) — only if needed
+           ↓
+   Graph resumes via HITL, template learning kicks in
 ```
 
-## Quick Start
+The graph pauses at the human review step using LangGraph's `interrupt()`. The invoice is already saved to the DB at that point, so it shows up in Streamlit immediately. When you click Approve, the graph resumes with your corrections via the thread ID.
 
-### 1. Setup environment
+---
+
+## Stack
+
+- **LangGraph** — multi-agent orchestration with HITL checkpointing (SQLite)
+- **FastAPI** — async REST API
+- **PostgreSQL** — invoice storage (SQLite in dev/tests)
+- **Streamlit** — human review UI
+- **PyMuPDF + Tesseract** — PDF text extraction with OCR fallback
+- **GPT-4o-mini** — field extraction (~$0.0003/invoice)
+- **watchdog** — file system monitoring
+- **structlog** — structured JSON logging
+
+---
+
+## Getting started
+
+### Prerequisites
+
+- Docker + Docker Compose, **or** Python 3.11 + Tesseract + Poppler installed locally
+- An OpenAI API key
+
+### With Docker (easiest)
+
 ```bash
 cp .env.example .env
 # Add your OPENAI_API_KEY to .env
-```
 
-### 2. Run with Docker (recommended)
-```bash
 docker-compose up --build
 ```
 
-### 3. Run locally
+That starts Postgres, the FastAPI backend, the file watcher, and Streamlit.
+
+### Running locally
+
 ```bash
 pip install -r requirements.txt
 
-# Terminal 1 — API
-uvicorn app.main:app --reload
-
-# Terminal 2 — Streamlit UI
-streamlit run ui/streamlit_app.py
-
-# Terminal 3 — File Watcher
-python scripts/start_watcher.py
+# Three terminals:
+uvicorn app.main:app --reload          # terminal 1
+streamlit run ui/streamlit_app.py      # terminal 2
+python scripts/start_watcher.py        # terminal 3
 ```
+
+### Environment variables
+
+```
+OPENAI_API_KEY=sk-...
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/invoice_db
+CONFIDENCE_THRESHOLD=0.85    # below this → human review
+OCR_FALLBACK_CHAR_LIMIT=50   # fewer chars than this → try OCR
+```
+
+---
 
 ## Usage
 
-1. Drop PDF invoices into `data/incoming/`
-2. Watcher detects them and runs the LangGraph pipeline automatically
-3. Open Streamlit UI at `http://localhost:8501`
-4. Review, edit, and approve pending invoices
-5. After first approval for a vendor → future invoices auto-approve
-6. Export CSV: click "Generate & Download CSV" in Streamlit or run:
-   ```bash
-   python scripts/generate_csv.py
-   ```
+1. Drop a PDF into `data/incoming/`
+2. The watcher picks it up within a second and runs the pipeline
+3. Open Streamlit at `http://localhost:8501`
+4. If the invoice needs review, it appears in the **Pending Review** tab
+5. Edit any fields, click Approve — the graph resumes and the vendor template activates
+6. The next invoice from that vendor auto-approves (if confidence holds)
 
-## Key Behaviours
+To export approved invoices to CSV:
 
-| Scenario | Result |
+```bash
+python scripts/generate_csv.py
+# or click "Generate & Download CSV" in the Streamlit UI
+```
+
+---
+
+## Vendor template learning
+
+This is the part I'm most happy with. The system isn't just a dumb extractor — it builds vendor profiles over time.
+
+- First invoice from a vendor → LLM extracts, human reviews
+- After first approval → vendor template activates, future invoices auto-approve
+- System tracks confidence over the last 10 invoices per vendor
+- If average confidence drops below 70% → template disabled, vendor flagged for review again (probably a layout change)
+- After human approves again → template reactivates
+
+---
+
+## Scenarios at a glance
+
+| What happens | Result |
 |---|---|
-| First invoice from vendor | → LLM extracts → human review |
-| After first approval | → vendor template activated |
-| Same vendor, high confidence | → auto-approved |
-| Confidence drops < 70% (last 10) | → layout change detected, template disabled |
-| Scanned PDF (no text) | → OCR fallback via Tesseract |
-| Duplicate invoice | → moved to `data/duplicates/` |
+| First invoice from a vendor | LLM extracts → human reviews → template activates |
+| Repeat invoice, known vendor | Auto-approved, no human needed |
+| Confidence drops (layout change) | Template disabled, back to human review |
+| Scanned PDF with no text layer | OCR fallback via Tesseract |
+| Same filename processed twice | Moved to `data/duplicates/`, skipped |
+| Same invoice_number already in DB | IntegrityError caught, moved to duplicates |
 
-## Endpoints
+---
 
-| Method | Endpoint | Description |
+## API endpoints
+
+| Method | Endpoint | What it does |
 |---|---|---|
-| GET | `/invoices/pending` | Pending review queue |
-| GET | `/invoices/` | All invoices |
-| PUT | `/review/{id}/approve` | Approve with corrections |
-| PUT | `/review/{id}/reject` | Reject invoice |
-| POST | `/reports/export-csv` | Download CSV |
-| GET | `/health` | Health check |
+| `GET` | `/invoices/pending` | Invoices waiting for human review |
+| `GET` | `/invoices/` | All invoices (last 100) |
+| `GET` | `/invoices/{id}` | Single invoice |
+| `PUT` | `/review/{id}/approve` | Approve with corrections, resumes graph |
+| `PUT` | `/review/{id}/reject` | Reject invoice |
+| `POST` | `/reports/export-csv` | Export approved invoices to CSV |
+| `GET` | `/health` | Health check |
 
-## Running Tests
+---
+
+## Running tests
+
 ```bash
 pytest tests/ -v
 ```
 
-## Cost Estimate
-- ~$0.0003 per invoice (GPT-4o-mini)
-- 1000 invoices/day ≈ $9/month in LLM costs
+Tests use SQLite in-memory — no Postgres or OpenAI calls needed. Covers validation logic, duplicate detection, template learning, and PDF extraction error handling.
+
+---
+
+## Project structure
+
+```
+app/
+├── agents/
+│   ├── graph.py              # LangGraph state, nodes, edges
+│   ├── duplicate_agent.py
+│   ├── extraction_agent.py
+│   ├── validation_agent.py
+│   ├── template_agent.py
+│   ├── save_agent.py
+│   └── tools/
+│       └── invoice_tools.py  # @tool-wrapped capabilities
+├── api/
+│   ├── invoices.py
+│   ├── review.py             # HITL resume logic lives here
+│   └── reports.py
+├── models/
+│   ├── invoice.py
+│   └── vendor_template.py
+├── services/
+│   ├── llm_service.py
+│   ├── template_learning.py
+│   ├── csv_exporter.py
+│   ├── pdf_extractor.py
+│   └── ocr_service.py
+├── prompts/
+│   └── extraction_prompt.txt
+└── config.py
+
+scripts/
+├── start_watcher.py
+└── generate_csv.py
+
+ui/
+└── streamlit_app.py
+
+tests/
+├── test_agents.py
+└── test_services.py
+```
+
+---
+
+## Cost
+
+GPT-4o-mini costs roughly $0.0003 per invoice. At 1,000 invoices a day that's about $9/month in LLM costs. The auto-approve logic means you're only paying for LLM calls anyway — human time is where the real savings are.
+
+---
+
+## What I'd add next
+
+- Slack/email notification when invoices land in the review queue
+- A confidence trend chart in Streamlit per vendor
+- Support for multi-page invoices with page-level extraction
+- Webhook support instead of (or alongside) the file watcher
